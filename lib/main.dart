@@ -15,8 +15,8 @@ class ZingCipherApp extends StatelessWidget {
       title: 'ZingCipher',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0F172A), // Dark Navy Background
-        colorScheme: const ColorScheme.dark(primary: Color(0xFFD8B4FE)), // Light Purple Accent
+        scaffoldBackgroundColor: const Color(0xFF0F172A), 
+        colorScheme: const ColorScheme.dark(primary: Color(0xFFD8B4FE)),
       ),
       home: const CipherScreen(),
     );
@@ -33,51 +33,54 @@ class CipherScreen extends StatefulWidget {
 class _CipherScreenState extends State<CipherScreen> {
   final TextEditingController _inputController = TextEditingController();
   String _outputText = "";
-  
-  // True = English to Numbers, False = Numbers to English
   bool _isEncodeMode = true; 
 
-  // 🚀 LOGIC 1: English to Secret Numbers
+  // 😈 THE "CRAZY" SECRET DICTIONARY 😈
+  final Map<String, String> _encodeMap = {
+    'a': 'z1,X', 'b': '8#mV', 'c': 'q9.P', 'd': '4!kL', 'e': 'v7~A',
+    'f': '2@pQ', 'g': 'm5\$w', 'h': '9^cT', 'i': 'b3*R', 'j': '6&yN',
+    'k': 'x0(O', 'l': '1)hD', 'm': 'd8_E', 'n': 'u4+F', 'o': '3-gJ',
+    'p': 's2=K', 'q': '7[fU', 'r': '0]iI', 's': 'w9{B', 't': '5}lH',
+    'u': 'j6|M', 'v': 'e3;C', 'w': 'r5:S', 'x': 't2,G', 'y': 'o8.W',
+    'z': 'n7/Y', ' ': '===' // Space ban gaya '==='
+  };
+
+  late Map<String, String> _decodeMap;
+
+  @override
+  void initState() {
+    super.initState();
+    // Decode map automatically ulta (reverse) ho jayega
+    _decodeMap = _encodeMap.map((key, value) => MapEntry(value, key));
+  }
+
+  // 🚀 LOGIC 1: English to Crazy Code
   void _encodeText(String text) {
     String result = '';
     for (int i = 0; i < text.length; i++) {
       String char = text[i].toLowerCase();
-      if (RegExp(r'[a-z]').hasMatch(char)) {
-        int num = char.codeUnitAt(0) - 96; // 'a' = 97 in ASCII. 97-96 = 1
-        result += '${num.toString().padLeft(2, '0')} '; // 1 becomes '01'
-      } else if (char == ' ') {
-        result += '00 '; // Space is '00'
+      if (_encodeMap.containsKey(char)) {
+        result += '${_encodeMap[char]} '; 
       } else {
-        result += '$char '; // Special symbols (.,!?) rahenge waise hi
+        result += '$char '; // Agar koi ? ya ! hai to waise hi rahega
       }
     }
-    setState(() {
-      _outputText = result.trim();
-    });
+    setState(() => _outputText = result.trim());
   }
 
-  // 🚀 LOGIC 2: Secret Numbers to Small English
+  // 🚀 LOGIC 2: Crazy Code to Small English
   void _decodeText(String text) {
     String result = '';
     List<String> parts = text.trim().split(RegExp(r'\s+'));
     
     for (String part in parts) {
-      if (part == '00') {
-        result += ' '; // '00' becomes Space
-      } else if (RegExp(r'^[0-9]{2}$').hasMatch(part)) {
-        int num = int.parse(part);
-        if (num >= 1 && num <= 26) {
-          result += String.fromCharCode(num + 96); // Number back to SMALL Char ('a' is 97)
-        } else {
-          result += part; // If wrong number, keep it as it is
-        }
+      if (_decodeMap.containsKey(part)) {
+        result += _decodeMap[part]!; 
       } else {
-        result += part; // Special symbols
+        result += part; 
       }
     }
-    setState(() {
-      _outputText = result;
-    });
+    setState(() => _outputText = result);
   }
 
   void _processText() {
@@ -140,7 +143,7 @@ class _CipherScreenState extends State<CipherScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      _isEncodeMode ? 'English' : 'Numbers',
+                      _isEncodeMode ? 'English' : 'Secret Code',
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Color(0xFFE9D5FF), fontSize: 18, fontWeight: FontWeight.bold),
                     ),
@@ -158,7 +161,7 @@ class _CipherScreenState extends State<CipherScreen> {
                   ),
                   Expanded(
                     child: Text(
-                      _isEncodeMode ? 'Numbers' : 'English',
+                      _isEncodeMode ? 'Secret Code' : 'English',
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Color(0xFFE9D5FF), fontSize: 18, fontWeight: FontWeight.bold),
                     ),
@@ -182,7 +185,7 @@ class _CipherScreenState extends State<CipherScreen> {
                 decoration: InputDecoration(
                   hintText: _isEncodeMode 
                       ? 'Type english message here...' 
-                      : 'Type secret numbers (e.g., 08 05 12 12 15)...',
+                      : 'Paste the crazy secret code here...',
                   hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
                   contentPadding: const EdgeInsets.all(20),
                   border: InputBorder.none,
@@ -260,7 +263,7 @@ class _CipherScreenState extends State<CipherScreen> {
                           _outputText.isEmpty ? "translation will appear here..." : _outputText,
                           style: const TextStyle(
                             color: Colors.white, 
-                            fontSize: 22, 
+                            fontSize: 20, 
                             fontWeight: FontWeight.w500, 
                             letterSpacing: 1.2
                           ),
