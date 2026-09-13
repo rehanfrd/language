@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -14,8 +15,8 @@ class ZingCipherApp extends StatelessWidget {
       title: 'ZingCipher',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0F172A),
-        colorScheme: const ColorScheme.dark(primary: Color(0xFF38BDF8)),
+        scaffoldBackgroundColor: const Color(0xFF0F172A), // Dark Navy Background
+        colorScheme: const ColorScheme.dark(primary: Color(0xFFD8B4FE)), // Light Purple Accent
       ),
       home: const CipherScreen(),
     );
@@ -32,15 +33,17 @@ class CipherScreen extends StatefulWidget {
 class _CipherScreenState extends State<CipherScreen> {
   final TextEditingController _inputController = TextEditingController();
   String _outputText = "";
-  bool _isEncodeMode = true; // True = English to Numbers, False = Numbers to English
+  
+  // True = English to Numbers, False = Numbers to English
+  bool _isEncodeMode = true; 
 
   // 🚀 LOGIC 1: English to Secret Numbers
   void _encodeText(String text) {
     String result = '';
     for (int i = 0; i < text.length; i++) {
-      String char = text[i].toUpperCase();
-      if (RegExp(r'[A-Z]').hasMatch(char)) {
-        int num = char.codeUnitAt(0) - 64; // A = 65 in ASCII. 65-64 = 1
+      String char = text[i].toLowerCase();
+      if (RegExp(r'[a-z]').hasMatch(char)) {
+        int num = char.codeUnitAt(0) - 96; // 'a' = 97 in ASCII. 97-96 = 1
         result += '${num.toString().padLeft(2, '0')} '; // 1 becomes '01'
       } else if (char == ' ') {
         result += '00 '; // Space is '00'
@@ -53,7 +56,7 @@ class _CipherScreenState extends State<CipherScreen> {
     });
   }
 
-  // 🚀 LOGIC 2: Secret Numbers to English
+  // 🚀 LOGIC 2: Secret Numbers to Small English
   void _decodeText(String text) {
     String result = '';
     List<String> parts = text.trim().split(RegExp(r'\s+'));
@@ -64,7 +67,7 @@ class _CipherScreenState extends State<CipherScreen> {
       } else if (RegExp(r'^[0-9]{2}$').hasMatch(part)) {
         int num = int.parse(part);
         if (num >= 1 && num <= 26) {
-          result += String.fromCharCode(num + 64); // Number back to Char
+          result += String.fromCharCode(num + 96); // Number back to SMALL Char ('a' is 97)
         } else {
           result += part; // If wrong number, keep it as it is
         }
@@ -93,57 +96,71 @@ class _CipherScreenState extends State<CipherScreen> {
     if (_outputText.isNotEmpty && _outputText != "Please enter some text!") {
       Clipboard.setData(ClipboardData(text: _outputText));
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Copied to Clipboard! 📋'), backgroundColor: Color(0xFF38BDF8)),
+        const SnackBar(
+          content: Text('Copied to Clipboard! 📋', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)), 
+          backgroundColor: Color(0xFFC084FC),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
+  }
+
+  void _swapMode() {
+    setState(() {
+      _isEncodeMode = !_isEncodeMode;
+      _outputText = "";
+      _inputController.clear();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ZingCipher 🕵️‍♂️', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('ZingCipher 🕵️‍♂️', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Mode Switcher Button
+            // 🔄 GOOGLE TRANSLATE STYLE SWAP HEADER
             Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(15),
+                color: const Color(0xFFD8B4FE).withOpacity(0.15),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFD8B4FE).withOpacity(0.3), width: 1.5),
               ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() { _isEncodeMode = true; _outputText = ""; _inputController.clear(); }),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        decoration: BoxDecoration(
-                          color: _isEncodeMode ? const Color(0xFF38BDF8) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Center(child: Text('Eng to Numbers', style: TextStyle(fontWeight: FontWeight.bold, color: _isEncodeMode ? Colors.white : Colors.white54))),
+                    child: Text(
+                      _isEncodeMode ? 'English' : 'Numbers',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Color(0xFFE9D5FF), fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _swapMode,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFFC084FC).withOpacity(0.3),
                       ),
+                      child: const Icon(Icons.swap_horiz_rounded, color: Colors.white, size: 28),
                     ),
                   ),
                   Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() { _isEncodeMode = false; _outputText = ""; _inputController.clear(); }),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        decoration: BoxDecoration(
-                          color: !_isEncodeMode ? const Color(0xFF4ADE80) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Center(child: Text('Numbers to Eng', style: TextStyle(fontWeight: FontWeight.bold, color: !_isEncodeMode ? Colors.white : Colors.white54))),
-                      ),
+                    child: Text(
+                      _isEncodeMode ? 'Numbers' : 'English',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Color(0xFFE9D5FF), fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -151,41 +168,74 @@ class _CipherScreenState extends State<CipherScreen> {
             ),
             const SizedBox(height: 25),
 
-            // Input TextField
-            TextField(
-              controller: _inputController,
-              maxLines: 4,
-              style: const TextStyle(color: Colors.white, fontSize: 18),
-              decoration: InputDecoration(
-                hintText: _isEncodeMode ? 'Type English message here...' : 'Type Secret Numbers (e.g., 08 05 12 12 15) here...',
-                hintStyle: const TextStyle(color: Colors.white38),
-                filled: true,
-                fillColor: const Color(0xFF1E293B),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+            // 📝 GLASSY INPUT BOX
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFD8B4FE).withOpacity(0.2), width: 1),
+              ),
+              child: TextField(
+                controller: _inputController,
+                maxLines: 4,
+                style: const TextStyle(color: Colors.white, fontSize: 18),
+                decoration: InputDecoration(
+                  hintText: _isEncodeMode 
+                      ? 'Type english message here...' 
+                      : 'Type secret numbers (e.g., 08 05 12 12 15)...',
+                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+                  contentPadding: const EdgeInsets.all(20),
+                  border: InputBorder.none,
+                ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 25),
 
-            // Translate Button
-            ElevatedButton(
-              onPressed: _processText,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _isEncodeMode ? const Color(0xFF38BDF8) : const Color(0xFF4ADE80),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            // 🚀 GLOSSY LIGHT PURPLE TRANSLATE BUTTON
+            GestureDetector(
+              onTap: _processText,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFC084FC), Color(0xFFD8B4FE)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFC084FC).withOpacity(0.4),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    )
+                  ],
+                ),
+                child: const Center(
+                  child: Text(
+                    'TRANSLATE 🚀',
+                    style: TextStyle(color: Color(0xFF2E1065), fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                  ),
+                ),
               ),
-              child: const Text('TRANSLATE 🚀', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 30),
 
-            // Output Container
+            // 📄 GLASSY OUTPUT CONTAINER
             Expanded(
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: _isEncodeMode ? const Color(0xFF38BDF8) : const Color(0xFF4ADE80), width: 2),
+                  color: const Color(0xFFD8B4FE).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFD8B4FE).withOpacity(0.4), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFC084FC).withOpacity(0.05),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                    )
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -193,20 +243,27 @@ class _CipherScreenState extends State<CipherScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Result:', style: TextStyle(color: Colors.white70, fontSize: 16)),
-                        IconButton(
-                          icon: const Icon(Icons.copy, color: Colors.white),
-                          onPressed: _copyToClipboard,
+                        const Text('Result:', style: TextStyle(color: Color(0xFFE9D5FF), fontSize: 16)),
+                        GestureDetector(
+                          onTap: _copyToClipboard,
+                          child: const Icon(Icons.copy_rounded, color: Color(0xFFD8B4FE)),
                         )
                       ],
                     ),
-                    const Divider(color: Colors.white24),
-                    const SizedBox(height: 10),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      child: Divider(color: Colors.white24, thickness: 1),
+                    ),
                     Expanded(
                       child: SingleChildScrollView(
                         child: SelectableText(
-                          _outputText.isEmpty ? "Translation will appear here..." : _outputText,
-                          style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 2),
+                          _outputText.isEmpty ? "translation will appear here..." : _outputText,
+                          style: const TextStyle(
+                            color: Colors.white, 
+                            fontSize: 22, 
+                            fontWeight: FontWeight.w500, 
+                            letterSpacing: 1.2
+                          ),
                         ),
                       ),
                     ),
