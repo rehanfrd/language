@@ -18,6 +18,9 @@ jobs:
       with:
         channel: 'stable'
     
+    - name: Create Android Folder
+      run: flutter create --platforms android .
+
     - run: flutter pub get
     - run: flutter build apk --release --no-tree-shake-icons
     
